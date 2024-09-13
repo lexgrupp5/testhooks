@@ -1,0 +1,18 @@
+name: Notify Manager Repo on Issue Events
+
+on:
+  issues:
+    types: [opened, edited, closed]  # Trigger on issue creation, update, or closing
+
+jobs:
+  notify_manager:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Trigger Manager Repo Webhook
+        run: |
+          curl -X POST \
+            -H "Accept: application/vnd.github.everest-preview+json" \
+            -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+            https://api.github.com/repos/lexgrupp5/manny/dispatches \
+            -d '{"event_type": "issue_event", "client_payload": {"repo": "${{ github.repository }}", "issue_number": ${{ github.event.issue.number }} }}'
