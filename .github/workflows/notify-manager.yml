@@ -6,7 +6,7 @@ env:
 
 on:
   issues:
-    types: [opened, labeled]
+    types: [opened, labeled, edited, closed]
 
 jobs:
   trigger-repo-m-workflow:
