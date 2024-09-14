@@ -1,18 +1,38 @@
-name: Notify Manager Repo on Issue Events
+name: Trigger Repo-M Workflow on Issue Creation
+
+env:
+  ORG_NAME: 'lexgrupp5'
+  MANAGER_REPO: 'manny'
 
 on:
   issues:
-    types: [opened, edited, closed]  # Trigger on issue creation, update, or closing
+    types: [opened, labeled]
 
 jobs:
-  notify_manager:
+  trigger-repo-m-workflow:
+    if: github.event.issue.labels.*.name contains('task') # Ensure it only triggers for 'task' labeled issues
     runs-on: ubuntu-latest
-
     steps:
-      - name: Trigger Manager Repo Webhook
-        run: |
-          curl -X POST \
-            -H "Accept: application/vnd.github.everest-preview+json" \
-            -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
-            https://api.github.com/repos/lexgrupp5/manny/dispatches \
-            -d '{"event_type": "issue_event", "client_payload": {"repo": "${{ github.repository }}", "issue_number": ${{ github.event.issue.number }} }}'
+      - name: Trigger Repo-M Workflow
+        uses: actions/github-script@v6
+        with:
+          github-token: ${{ secrets.ACTIONS_PAT }}
+          script: |
+            const repoMWorkflowDispatchUrl = `repos/${process.env.ORG_NAME}/${process.env.MANAGER_REPO}/dispatches;
+
+            // Get issue information
+            const issueNumber = context.payload.issue.number;
+            const issueTitle = context.payload.issue.title;
+            const issueUrl = context.payload.issue.html_url;
+
+            // Trigger Repo-M workflow with issue details
+            await github.request('POST /' + repoMWorkflowDispatchUrl, {
+              owner: process.env.ORG_NAME,
+              repo: process.env.MANAGER_REPO,
+              ref: 'main',  // Reference branch
+              inputs: {
+                issue_number: issueNumber,
+                issue_title: issueTitle,
+                issue_url: issueUrl
+              }
+            });
